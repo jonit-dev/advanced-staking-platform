@@ -1,5 +1,6 @@
 {
   "solidity.packageDefaultDependenciesContractsDirectory": "",
   "solidity.packageDefaultDependenciesDirectory": "node_modules",
-  "workbench.colorTheme": "Evondev Dracula Darker Contrast"
+  "workbench.colorTheme": "Evondev Dracula Darker Contrast",
+  "editor.defaultFormatter": "JuanBlanco.solidity"
 }

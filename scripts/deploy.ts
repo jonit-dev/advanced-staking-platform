@@ -6,6 +6,7 @@ import hre from "hardhat";
 
 import path from "path";
 import { deployContract } from "../helpers/deployHelpers";
+import { DappToken, RewardToken, TokenFarm } from "../typechain";
 
 interface IABIOutput {
   contract: Contract;
@@ -15,14 +16,29 @@ interface IABIOutput {
 async function main() {
   //* 1) Add the deploy contract below
   //* 2) Then, just insert it into the abiOutputs array
-  // const daiToken = await deployContract<DAIToken>("DAIToken");
-  // const abiOutputs: IABIOutput[] = [
-  //   {
-  //     contract: daiToken,
-  //     name: "DAIToken",
-  //   }
-  // ];
-  // generateABI(abiOutputs);
+
+  const RewardToken = await deployContract<RewardToken>("RewardToken");
+  const DappToken = await deployContract<DappToken>("DappToken");
+
+  const TokenFarm = await deployContract<TokenFarm>("TokenFarm", {
+    args: [DappToken.address, RewardToken.address],
+  });
+
+  const abiOutputs: IABIOutput[] = [
+    {
+      contract: DappToken,
+      name: "DappToken",
+    },
+    {
+      contract: RewardToken,
+      name: "RewardToken",
+    },
+    {
+      contract: TokenFarm,
+      name: "TokenFarm",
+    },
+  ];
+  generateABI(abiOutputs);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

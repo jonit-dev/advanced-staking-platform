@@ -13,7 +13,7 @@ interface IDeployContractOptions {
 export async function deployContract<T>(
   name: string,
   options?: IDeployContractOptions,
-  showLogs?: boolean
+  showLogs: boolean = true
 ): Promise<T> {
   const Contract = await ethers.getContractFactory(name);
   let contract;
