@@ -2,6 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployContract } from "../helpers/deployHelpers";
+import { ToToken } from "../helpers/utilsHelper";
 import { DappToken, RewardToken, TokenFarm } from "../typechain";
 import { AnotherToken } from "../typechain/AnotherToken";
 import { moveBlocks } from "../utils/moveBlocks";
@@ -30,10 +31,19 @@ describe("TokenFarm.sol", async function () {
       args: [dappToken.address, rewardToken.address],
     });
 
+    // transfer reward token total supply to TokenFarm.
+    await rewardToken.transfer(tokenFarm.address, await rewardToken.totalSupply());
+
     await dappToken.transfer(investor.address, stakeAmount);
     await anotherToken.transfer(investor.address, stakeAmount); //for unauthorized token tests
     const investorBalance = await dappToken.balanceOf(investor.address);
     console.log("Investor balance:", investorBalance.toString());
+  });
+
+  it("TokenFarm should own all RewardToken supply", async () => {
+    const rewardTokenBalance = await rewardToken.balanceOf(tokenFarm.address);
+
+    expect(rewardTokenBalance.toString()).to.equal(await rewardToken.totalSupply());
   });
 
   it("Investor initial balance must be equal to the stake amount", async () => {
@@ -63,9 +73,13 @@ describe("TokenFarm.sol", async function () {
     await expect(tokenFarm.connect(investor).stake(0, dappToken.address)).to.be.revertedWith("Amount cannot be 0.");
   });
 
-  it("Allows users to stake", async () => {
+  it("Allows users to stake and claim rewards successfully", async () => {
+    const initialDappTokenBalance = await dappToken.balanceOf(investor.address);
+
     await dappToken.connect(investor).approve(tokenFarm.address, stakeAmount);
     await tokenFarm.connect(investor).stake(stakeAmount, dappToken.address);
+
+    expect(initialDappTokenBalance).to.equal(ToToken("1"));
 
     const startingEarned = await tokenFarm.earned(investor.address);
 
@@ -76,7 +90,16 @@ describe("TokenFarm.sol", async function () {
 
     const endingEarned = await tokenFarm.earned(investor.address);
     console.log(`endingEarned: ${endingEarned}`);
-
     expect(endingEarned > startingEarned).to.be.true;
+
+    await tokenFarm.connect(investor).claimReward();
+
+    const rewardTokenBalance = await rewardToken.balanceOf(investor.address);
+
+    expect(rewardTokenBalance).to.not.equal(0);
+
+    expect(rewardTokenBalance).to.equal(endingEarned);
+
+    console.log(`Reward Token balance(investor): ${rewardTokenBalance}`);
   });
 });

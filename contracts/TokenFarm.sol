@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "hardhat/console.sol";
 
 /*
 Main functionalities:
@@ -55,6 +56,10 @@ contract TokenFarm is Ownable, ReentrancyGuard {
 
   function claimReward() external updateReward(msg.sender) {
     uint256 reward = s_rewards[msg.sender];
+
+    console.log("Claiming reward for %s", msg.sender);
+    console.log("Reward: %s", reward);
+
     bool success = s_rewardToken.transfer(msg.sender, reward);
 
     require(success, "Claim reward failed.");
