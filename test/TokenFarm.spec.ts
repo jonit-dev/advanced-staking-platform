@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployContract } from "../helpers/deployHelpers";
 import { ToToken } from "../helpers/utilsHelper";
-import { DappToken, RewardToken, TokenFarm } from "../typechain";
+import { RewardToken, StakingToken, TokenFarm } from "../typechain";
 import { AnotherToken } from "../typechain/AnotherToken";
 import { moveBlocks } from "../utils/moveBlocks";
 import { moveTime } from "../utils/moveTime";
@@ -11,7 +11,7 @@ const SECONDS_IN_DAY = 60 * 60 * 24 * 30;
 
 describe("TokenFarm.sol", async function () {
   let accounts: SignerWithAddress[], deployer: SignerWithAddress, investor: SignerWithAddress;
-  let dappToken: DappToken;
+  let stakingToken: StakingToken;
   let rewardToken: RewardToken;
   let tokenFarm: TokenFarm;
   let anotherToken: AnotherToken;
@@ -23,20 +23,20 @@ describe("TokenFarm.sol", async function () {
     deployer = accounts[0];
     investor = accounts[1];
 
-    dappToken = await deployContract<DappToken>("DappToken");
+    stakingToken = await deployContract<StakingToken>("StakingToken");
     rewardToken = await deployContract<RewardToken>("RewardToken");
     anotherToken = await deployContract<AnotherToken>("AnotherToken");
 
     tokenFarm = await deployContract<TokenFarm>("TokenFarm", {
-      args: [dappToken.address, rewardToken.address],
+      args: [stakingToken.address, rewardToken.address],
     });
 
     // transfer reward token total supply to TokenFarm.
     await rewardToken.transfer(tokenFarm.address, await rewardToken.totalSupply());
 
-    await dappToken.transfer(investor.address, stakeAmount);
+    await stakingToken.transfer(investor.address, stakeAmount);
     await anotherToken.transfer(investor.address, stakeAmount); //for unauthorized token tests
-    const investorBalance = await dappToken.balanceOf(investor.address);
+    const investorBalance = await stakingToken.balanceOf(investor.address);
     console.log("Investor balance:", investorBalance.toString());
   });
 
@@ -47,7 +47,7 @@ describe("TokenFarm.sol", async function () {
   });
 
   it("Investor initial balance must be equal to the stake amount", async () => {
-    const investorBalance = await dappToken.balanceOf(investor.address);
+    const investorBalance = await stakingToken.balanceOf(investor.address);
     expect(investorBalance).to.eq(stakeAmount);
   });
 
@@ -59,27 +59,27 @@ describe("TokenFarm.sol", async function () {
     );
   });
 
-  it("TokenFarm should have both RewardToken and DappToken addresses", async () => {
+  it("TokenFarm should have both RewardToken and StakingToken addresses", async () => {
     const rewardtokenAddress = await tokenFarm.s_rewardToken();
-    const dappTokenAddress = await tokenFarm.s_stakingToken();
+    const StakingTokenAddress = await tokenFarm.s_stakingToken();
 
     expect(rewardtokenAddress).to.equal(rewardToken.address);
-    expect(dappTokenAddress).to.equal(dappToken.address);
+    expect(StakingTokenAddress).to.equal(stakingToken.address);
   });
 
   it("Shouldn't allow an investor stake 0 tokens", async () => {
-    await dappToken.connect(investor).approve(tokenFarm.address, stakeAmount);
+    await stakingToken.connect(investor).approve(tokenFarm.address, stakeAmount);
 
-    await expect(tokenFarm.connect(investor).stake(0, dappToken.address)).to.be.revertedWith("Amount cannot be 0.");
+    await expect(tokenFarm.connect(investor).stake(0, stakingToken.address)).to.be.revertedWith("Amount cannot be 0.");
   });
 
   it("Allows users to stake and claim rewards successfully", async () => {
-    const initialDappTokenBalance = await dappToken.balanceOf(investor.address);
+    const initialStakingTokenBalance = await stakingToken.balanceOf(investor.address);
 
-    await dappToken.connect(investor).approve(tokenFarm.address, stakeAmount);
-    await tokenFarm.connect(investor).stake(stakeAmount, dappToken.address);
+    await stakingToken.connect(investor).approve(tokenFarm.address, stakeAmount);
+    await tokenFarm.connect(investor).stake(stakeAmount, stakingToken.address);
 
-    expect(initialDappTokenBalance).to.equal(ToToken("1"));
+    expect(initialStakingTokenBalance).to.equal(ToToken("1"));
 
     const startingEarned = await tokenFarm.earned(investor.address);
 

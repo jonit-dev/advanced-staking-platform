@@ -6,7 +6,7 @@ import hre from "hardhat";
 
 import path from "path";
 import { deployContract } from "../helpers/deployHelpers";
-import { DappToken, RewardToken, TokenFarm } from "../typechain";
+import { RewardToken, StakingToken, TokenFarm } from "../typechain";
 
 interface IABIOutput {
   contract: Contract;
@@ -18,16 +18,16 @@ async function main() {
   //* 2) Then, just insert it into the abiOutputs array
 
   const RewardToken = await deployContract<RewardToken>("RewardToken");
-  const DappToken = await deployContract<DappToken>("DappToken");
+  const StakingToken = await deployContract<StakingToken>("StakingToken");
 
   const TokenFarm = await deployContract<TokenFarm>("TokenFarm", {
-    args: [DappToken.address, RewardToken.address],
+    args: [StakingToken.address, RewardToken.address],
   });
 
   const abiOutputs: IABIOutput[] = [
     {
-      contract: DappToken,
-      name: "DappToken",
+      contract: StakingToken,
+      name: "StakingToken",
     },
     {
       contract: RewardToken,
