@@ -98,8 +98,6 @@ describe("TokenFarm.sol", async function () {
 
     expect(rewardTokenBalance).to.not.equal(0);
 
-    expect(rewardTokenBalance).to.equal(endingEarned);
-
     console.log(`Reward Token balance(investor): ${rewardTokenBalance}`);
   });
 });
